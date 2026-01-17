@@ -8,7 +8,6 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 export default function TabLayout() {
   return (
     <Tabs
-	  initialRouteName="home"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -24,9 +23,6 @@ export default function TabLayout() {
           backgroundColor: "#0b57d0",
           borderTopWidth: 0,
           marginHorizontal: 20,
-
-          paddingBottom: 0,
-          paddingTop: 0,
         },
 
         // 🔥 THIS FIXES CENTERING
@@ -58,7 +54,7 @@ export default function TabLayout() {
                 name="house.fill"
                 size={30}
                 color={focused ? "#fff" : "rgba(255,255,255,0.6)"}
-                
+                style={{ marginTop: 10 }}
               />
             </View>
           ),
@@ -73,6 +69,7 @@ export default function TabLayout() {
               name="chart.bar.fill"
               size={30}
               color={focused ? "#fff" : "rgba(255,255,255,0.6)"}
+              style={{ marginTop: 10 }}
             />
           ),
         }}
@@ -86,6 +83,7 @@ export default function TabLayout() {
               name="magnifyingglass"
               size={30}
               color={focused ? "#fff" : "rgba(255,255,255,0.6)"}
+              style={{ marginTop: 10 }}
             />
           ),
         }}
@@ -99,6 +97,7 @@ export default function TabLayout() {
               name="person.fill"
               size={30}
               color={focused ? "#fff" : "rgba(255,255,255,0.6)"}
+              style={{ marginTop: 10 }}
             />
           ),
         }}

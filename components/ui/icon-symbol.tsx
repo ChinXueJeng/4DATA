@@ -14,10 +14,22 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
+  // Home
+  "house.fill": "home",
+
+  // Analysis / Stats
+  "chart.bar.fill": "bar-chart",
+
+  // Search / Explore
+  magnifyingglass: "search",
+
+  // Profile
+  "person.fill": "person",
+
+  // Existing
+  "paperplane.fill": "send",
+  "chevron.left.forwardslash.chevron.right": "code",
+  "chevron.right": "chevron-right",
 } as IconMapping;
 
 /**
@@ -35,7 +47,20 @@ export function IconSymbol({
   size?: number;
   color: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
-  weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return (
+    <MaterialIcons
+      name={MAPPING[name]}
+      size={size}
+      color={color}
+      style={[
+        {
+          includeFontPadding: false, // 🔥 ANDROID FIX
+          textAlignVertical: "center",
+        },
+        style,
+      ]}
+    />
+  );
 }
+

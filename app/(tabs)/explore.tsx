@@ -1,112 +1,219 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
-export default function TabTwoScreen() {
+export default function ExploreScreen() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [recent, setRecent] = useState(["3933"]);
+
+  const removeItem = (index: number) => {
+    setRecent((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSearch = () => {
+    if (search.length === 4) {
+      // Add to recent searches if not already in the list
+      if (!recent.includes(search)) {
+        setRecent(prev => [search, ...prev].slice(0, 4)); // Keep only 4 most recent
+      }
+      // Navigate to number details with source parameter
+      router.push({
+        pathname: '/(tabs)/explore/number-details_explore',
+        params: { 
+          number: search,
+          fromExplore: 'true'  // Add a flag to indicate navigation from explore
+        }
+      });
+      setSearch("");
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+        {/* Search Bar */}
+        <View style={styles.searchRow}>
+          <View style={styles.searchBox}>
+            <Ionicons name="search" size={18} color="#999" />
+            <TextInput
+              placeholder="Enter 4-digit number"
+              value={search}
+              onChangeText={(text) => {
+                // Only allow numbers and limit to 4 digits
+                if (/^\d{0,4}$/.test(text)) {
+                  setSearch(text);
+                }
+              }}
+              keyboardType="number-pad"
+              maxLength={4}
+              style={styles.input}
+            />
+          </View>
+          <TouchableOpacity 
+            onPress={handleSearch}
+            disabled={search.length !== 4}
+            style={[styles.searchButton, search.length !== 4 && styles.searchButtonDisabled]}
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Recent Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.recentText}>Recent</Text>
+            <TouchableOpacity onPress={() => setRecent([])}>
+              <Text style={styles.clear}>Clear All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={recent}
+            keyExtractor={(_, i) => i.toString()}
+            renderItem={({ item, index }) => (
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#eef2f7",
+                    flex: 1,
+                    justifyContent: "center",
+                    padding: 5,
+                    borderRadius: 20,
+                  }}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/(tabs)/explore/number-details_explore',
+                      params: { number: item,
+                        fromExplore: 'true'
+                       }
+                    });
+                  }}
+                >
+                  <Text style={styles.item}>{item}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#eef2f7",
+                    padding: 5,
+                    borderRadius: 20,
+                  }}
+                  onPress={() => removeItem(index)}
+                >
+                  <Ionicons name="close" size={20} color="#b0b0b0" />
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: "#eef2f7",
+    paddingHorizontal: 20,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 20,
+  },
+
+  searchBox: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 50,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+
+  input: {
+    marginLeft: 8,
+    flex: 1,
+  },
+
+  cancel: {
+    color: "#3b82f6",
+    fontSize: 16,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    marginTop: 20,
+    borderRadius: 16,
+    padding: 14,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+
+  recentText: {
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
+  clear: {
+    color: "#3b82f6",
+    fontSize: 14,
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+
+  item: {
+    fontSize: 16,
+    color: "#1f2937",
+    paddingLeft: 20,
+  },
+  searchButton: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchButtonDisabled: {
+    backgroundColor: "#9ca3af",
+    opacity: 0.7,
+  },
+  searchButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });

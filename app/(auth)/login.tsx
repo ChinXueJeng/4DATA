@@ -1,0 +1,220 @@
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
+
+// Helper function to get the correct redirect URL based on platform
+const getRedirectUrl = () => {
+  if (Platform.OS === 'web') {
+    return window.location.origin;
+  }
+  // For mobile, use the deep link URL scheme
+  return 'magnum://';
+};
+import { supabase, signInWithGoogle, signInWithFacebook } from '@/lib/supabase';
+import { MaterialIcons } from '@expo/vector-icons';
+
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (type: 'email' | 'google' | 'facebook') => {
+    try {
+      setLoading(true);
+      
+      if (type === 'email') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+        // Navigate to home on successful login
+        router.replace('/(tabs)/home');
+      } else if (type === 'google') {
+        await signInWithGoogle();
+      } else if (type === 'facebook') {
+        await signInWithFacebook();
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during login';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome Back</Text>
+      
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        
+        <TouchableOpacity 
+          style={[styles.button, styles.emailButton]}
+          onPress={() => handleLogin('email')}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign In with Email</Text>
+          )}
+        </TouchableOpacity>
+        
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR</Text>
+          <View style={styles.dividerLine} />
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.button, styles.googleButton]}
+          onPress={() => handleLogin('google')}
+          disabled={loading}
+        >
+          <MaterialIcons name="language" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.buttonText}>Continue with Google</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, styles.facebookButton]}
+          onPress={() => handleLogin('facebook')}
+          disabled={loading}
+        >
+          <MaterialIcons name="facebook" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.buttonText}>Continue with Facebook</Text>
+        </TouchableOpacity>
+        <View style={styles.footerContainer}>
+          <TouchableOpacity 
+            style={[styles.button, styles.button]}
+            onPress={() => router.push({ pathname: '/(auth)/register' as any })}
+            disabled={loading}
+          >
+            <Text style={[styles.buttonText, {color: '#007AFF'}]}>Create Account</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={() => router.replace({ pathname: '/(tabs)/home' })}
+            disabled={loading}
+          >
+            <Text style={[styles.buttonText, {color: '#007AFF'}]}>Skip for now</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.skipButton]}
+            onPress={async () => {
+              // Set a flag in local storage to indicate bypassed login
+              await AsyncStorage.setItem('bypassedLogin', 'true');
+              router.replace('/(tabs)/home');
+            }}
+            disabled={loading}
+          >
+            <Text style={[styles.buttonText, {color: '#007AFF'}]}>Skip Login (Bypass)</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+    color: '#333',
+  },
+  form: {
+    width: '100%',
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  emailButton: {
+    backgroundColor: '#1E5BFF',
+  },
+  googleButton: {
+    backgroundColor: '#DB4437',
+  },
+  facebookButton: {
+    backgroundColor: '#3b5998',
+    marginTop: 12,
+  },
+  skipButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1E5BFF',
+    marginTop: 10,
+    width: '100%',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#666',
+  },
+  icon: {
+    marginRight: 10,
+  },
+  footerContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+});
