@@ -45,7 +45,6 @@
     "react-native-gesture-handler": "~2.28.0",
     "react-native-localize": "^3.6.1",
     "react-native-purchases": "^9.7.1",
-    "react-native-purchases-ui": "^9.7.1",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
@@ -54,7 +53,6 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
-    "@react-native-community/cli": "^20.0.2",
     "@types/node": "^25.0.10",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
