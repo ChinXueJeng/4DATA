@@ -18,11 +18,7 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
 // Replace with your RevenueCat API key
 const iOSKey = "appl_mDLVbdLtNzYAGnnsvdQBCMYzBrg";
 const androidKey = "goog_HYquXHhzebDACXSxFyldrQmuQxl";
-const REVENUECAT_API_KEY = __DEV__
-  ? "test_BmGCUarSHiNXAMtXbrUediqRzqF"
-  : Platform.OS === "android"
-    ? androidKey
-    : iOSKey;
+const REVENUECAT_API_KEY = Platform.OS === "android" ? androidKey : iOSKey;
 // Replace with your actual API key
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -35,6 +31,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
     const setupRevenueCat = async () => {
       try {
         // Initialize RevenueCat
+        Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
         await Purchases.configure({
           apiKey: REVENUECAT_API_KEY,
         });

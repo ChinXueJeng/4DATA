@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#1E5BFF",
     marginTop: 10,
-    width: "100%",
+    width: "50%",
   },
   buttonText: {
     color: "#fff",
