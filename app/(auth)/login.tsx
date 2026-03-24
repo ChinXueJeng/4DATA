@@ -178,7 +178,7 @@ export default function LoginScreen() {
             onPress={() => router.replace("/(tabs)/home")}
             disabled={loading}
           >
-            <Text style={[styles.buttonText, { color: "#1E5BFF" }]}>
+            <Text style={[styles.buttonText, { color: "#1E5BFF", fontSize: 8 }]}>
               Continue as Guest
             </Text>
           </TouchableOpacity>
@@ -212,12 +212,16 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   input: {
-    backgroundColor: "#f7f7f7ff",
+    backgroundColor: "#e0e0e0",
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     fontSize: 16,
+    color: "#000",
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
+
   button: {
     flexDirection: "row",
     alignItems: "center",
@@ -237,11 +241,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   skipButton: {
-    backgroundColor: "transparent",
+    backgroundColor: "#ffffff",          
     borderWidth: 1,
-    borderColor: "#1E5BFF",
-    marginTop: 10,
-    width: "50%",
+    borderColor: "#7c9df6",
+    marginTop: -5,
+    width: "22%",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    opacity: 0.6,
   },
   buttonText: {
     color: "#fff",

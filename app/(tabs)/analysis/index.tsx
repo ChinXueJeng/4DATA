@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
   ActivityIndicator,
+  Animated,
+  Easing,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { supabase } from "@/lib/supabase";
+
 import { useLanguage } from '@/app/contexts/LanguageContext';
+import { supabase } from "@/lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 interface LotteryResult {
@@ -21,12 +24,55 @@ interface LotteryResult {
   prize_type: string;
   total_points: number | null;
 }
+
+const useGlowPulse = () => {
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const glowAnim = React.useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.08,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: false,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0.3,
+            duration: 800,
+            useNativeDriver: false,
+          }),
+        ]),
+      ])
+    ).start();
+  }, []);
+
+  return { scaleAnim, glowAnim };
+};
+
 export default function AnalysisScreen() {
   const insets = useSafeAreaInsets();
   const [results, setResults] = useState<Record<string, LotteryResult[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t, currentLanguage } = useLanguage();
+  const { scaleAnim, glowAnim } = useGlowPulse();
+
 
   // Function to format date based on current language
   const formatDate = (dateString: string) => {
@@ -57,7 +103,7 @@ export default function AnalysisScreen() {
     const fetchResults = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch the 10 most recent lottery dates with their 1st, 2nd, and 3rd prizes and total_points
         const { data, error: fetchError } = await supabase
           .from('result')
@@ -69,7 +115,7 @@ export default function AnalysisScreen() {
         // Group results by date
         const groupedResults = data.reduce((acc: Record<string, LotteryResult[]>, item) => {
           const date = formatDate(item.draw_date);
-          
+
           if (!acc[date]) {
             acc[date] = [];
           }
@@ -115,13 +161,13 @@ export default function AnalysisScreen() {
           style={{ height: 50, width: 50, borderRadius: 10 }}
         />
       </View>
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {Object.entries(results).map(([date, prizes], index) => (
-          <TouchableOpacity 
-            key={index} 
+          <TouchableOpacity
+            key={index}
             style={[styles.card, styles.shadow]}
             onPress={() => handleCardPress(prizes[0].draw_date)} // Use the original draw_date from the first prize
           >
@@ -129,20 +175,45 @@ export default function AnalysisScreen() {
             <View style={styles.prizeContainer}>
               {prizes
                 .sort((a, b) => parseInt(a.prize_type) - parseInt(b.prize_type))
-                .map((prize, idx) => (
-                  <View 
-                    key={idx} 
-                    style={[
-                      styles.prizeBox,
-                      prize.total_points !== null && prize.total_points >= 85 && { backgroundColor: "#42ea61" },
-                      prize.total_points !== null && prize.total_points >= 70 && prize.total_points < 85 && { backgroundColor: "#a2ffb3" },
-                      prize.total_points !== null && prize.total_points < 70 && { backgroundColor: "#fffbb5" },
-                    ]}
-                  >
-                    <Text style={styles.prizeNumber}>{prize.number}</Text>
-                  </View>
-                ))}
+                .map((prize, idx) => {
+                  const boxStyle = [
+                    styles.prizeBox,
+                    prize.total_points !== null && prize.total_points >= 85 && { backgroundColor: "#42ea61" },
+                    prize.total_points !== null && prize.total_points >= 70 && prize.total_points < 85 && { backgroundColor: "#a2ffb3" },
+                    prize.total_points !== null && prize.total_points < 70 && { backgroundColor: "#fffbb5" },
+                  ];
+
+                  // 🔥 FIRST CARD → ALL 3 NUMBERS GLOW
+                  if (index === 0) {
+                    return (
+                      <Animated.View
+                        key={idx}
+                        style={{
+                          transform: [{ scale: scaleAnim }],
+                          shadowColor: "yellow",
+                          shadowOpacity: glowAnim,
+                          shadowRadius: 20,
+                          elevation: 12,
+                        }}
+                      >
+                        <View style={boxStyle}>
+                          <Text style={styles.prizeNumber}>{prize.number}</Text>
+                        </View>
+                      </Animated.View>
+                    );
+                  }
+
+                  // ✅ Others normal
+                  return (
+                    <View key={idx} style={boxStyle}>
+                      <Text style={styles.prizeNumber}>{prize.number}</Text>
+                    </View>
+                  );
+                })}
+
+
             </View>
+
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -228,7 +299,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 13,
   },
-   errorText: {
+  errorText: {
     color: "red",
     textAlign: "center",
     padding: 20,

@@ -41,9 +41,22 @@ export default function ExploreScreen() {
         if (storedSearches) {
           setRecent(JSON.parse(storedSearches));
         }
+        const TODAY = new Date().toDateString();
+
         if (storedCount) {
-          setSearchCount(parseInt(storedCount));
+          const parsed = JSON.parse(storedCount);
+
+          if (parsed.date === TODAY) {
+            setSearchCount(parsed.count);
+          } else {
+            setSearchCount(0);
+            await AsyncStorage.setItem(
+              SEARCH_COUNT_KEY,
+              JSON.stringify({ count: 0, date: TODAY })
+            );
+          }
         }
+
       } catch (error) {
         console.error("Error loading data:", error);
       }
@@ -73,7 +86,7 @@ export default function ExploreScreen() {
 
   const handleSearch = async () => {
     if (search.length === 4) {
-      if (searchCount >= 4) {
+      if (!isSubscribed && searchCount >= 4) {
         // Check if user is logged in
         const {
           data: { user },
@@ -107,7 +120,13 @@ export default function ExploreScreen() {
       // Increment search count
       const newSearchCount = searchCount + 1;
       setSearchCount(newSearchCount);
-      await AsyncStorage.setItem(SEARCH_COUNT_KEY, newSearchCount.toString());
+      await AsyncStorage.setItem(
+        SEARCH_COUNT_KEY,
+        JSON.stringify({
+          count: newSearchCount,
+          date: new Date().toDateString(),
+        })
+      );
 
       // Create new recent searches array with the new search term at the beginning
       const newRecent = [
@@ -131,30 +150,34 @@ export default function ExploreScreen() {
     }
   };
 
-  return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
-        {/* Search Bar */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#999" />
-            <TextInput
-              placeholder={t("enter4digitnumber")}
-              value={search}
-              onChangeText={(text) => {
-                // Only allow numbers and limit to 4 digits
-                if (/^\d{0,4}$/.test(text)) {
-                  setSearch(text);
-                }
-              }}
-              keyboardType="number-pad"
-              maxLength={4}
-              style={styles.input}
-            />
-          </View>
+return (
+  <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+      {/* Search Bar */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={18} color="#999" />
+          <TextInput
+            placeholder={t("enter4digitnumber")}
+            value={search}
+            onChangeText={(text) => {
+              const cleaned = text.replace(/[^0-9]/g, "");
+              setSearch(cleaned.slice(0, 4));
+            }}
+            keyboardType="numeric"
+            inputMode="numeric"
+            maxLength={4}
+            style={styles.input}
+            // Add this:
+            onSubmitEditing={handleSearch}           // ← very useful bonus
+            returnKeyType="search"
+            blurOnSubmit={false}
+          />
+        </View>
           <TouchableOpacity
             onPress={handleSearch}
             disabled={search.length !== 4}
+            activeOpacity={0.7}
             style={[
               styles.searchButton,
               search.length !== 4 && styles.searchButtonDisabled,
@@ -163,6 +186,12 @@ export default function ExploreScreen() {
             <Text style={styles.searchButtonText}>{t("search")}</Text>
           </TouchableOpacity>
         </View>
+        {!isSubscribed && (
+          <Text style={{ marginTop: 8, color: "#555" }}>
+            Remaining searches: {Math.max(0, 4 - searchCount)}
+          </Text>
+        )}
+
 
         {/* Recent Card */}
         <View style={styles.card}>
@@ -290,14 +319,16 @@ const styles = StyleSheet.create({
     color: "#1f2937",
     paddingLeft: 20,
   },
-  searchButton: {
-    backgroundColor: "#3b82f6",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+searchButton: {
+  backgroundColor: "#3b82f6",
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+  // NEW:
+  minWidth: 90,           // prevent tiny tap target
+},
   searchButtonDisabled: {
     backgroundColor: "#9ca3af",
     opacity: 0.7,

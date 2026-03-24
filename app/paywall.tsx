@@ -93,7 +93,7 @@ export default function Paywall() {
 
         <View style={styles.imageContainer}>
           <Image
-            source={require('../assets/images/paywall.jpeg')}
+            source={require('../assets/images/paywall.png')}
             style={styles.image}
             resizeMode="contain"
           />

@@ -6,7 +6,9 @@ import * as SecureStore from "expo-secure-store";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  Animated,
   Dimensions,
+  Easing,
   Image,
   Modal,
   ScrollView,
@@ -17,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 
 // Generate a consistent daily lucky number for the user
 const useDailyLuckyNumber = (userId: string): number => {
@@ -310,50 +313,108 @@ export default function HomeScreen() {
       router.push({ pathname: "/paywall" });
     }
   }, [isSubscribed, router, userId]);
+  const useGlowPulse = () => {
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const glowAnim = React.useRef(new Animated.Value(0.3)).current;
 
-  function ChipGrid({ data, onPressChip, onPressViewAll }: ChipGridProps) {
-    return (
-      <View style={styles.grid}>
-        {data.slice(0, 40).map((item) => {
-          const ChipWrapper = onPressChip ? TouchableOpacity : View;
+  useEffect(() => {
+    Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.08,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: false,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0.3,
+            duration: 800,
+            useNativeDriver: false,
+          }),
+        ]),
+      ])
+    ).start();
+  }, []);
 
-          return (
-            <ChipWrapper
-              key={item.id}
-              activeOpacity={0.7}
-              onPress={() => onPressChip?.(item)}
-              style={[
-                styles.chip,
-                styles.chipShadow,
-                { width: CHIP_WIDTH, alignItems: "center" },
-                item.color === "yellow"
-                  ? styles.chipYellow
-                  : item.color === "lightGreen"
-                    ? styles.chipLightGreen
-                    : styles.chipGreen,
-              ]}
-            >
-              <Text style={styles.chipText}>{item.number}</Text>
-            </ChipWrapper>
-          );
-        })}
+  return { scaleAnim, glowAnim };
+};
 
-        {/* View All */}
+function ChipGrid({ data, onPressChip, onPressViewAll }: ChipGridProps) {
+  const { scaleAnim, glowAnim } = useGlowPulse();
+
+  return (
+    <View style={styles.grid}>
+      {/* ✅ Normal chips (NO animation) */}
+      {data.slice(0, 40).map((item) => {
+        const ChipWrapper = onPressChip ? TouchableOpacity : View;
+
+        return (
+          <ChipWrapper
+            key={item.id}
+            activeOpacity={0.7}
+            onPress={() => onPressChip?.(item)}
+            style={[
+              styles.chip,
+              styles.chipShadow,
+              { width: CHIP_WIDTH, alignItems: "center" },
+              item.color === "yellow"
+                ? styles.chipYellow
+                : item.color === "lightGreen"
+                ? styles.chipLightGreen
+                : styles.chipGreen,
+            ]}
+          >
+            <Text style={styles.chipText}>{item.number}</Text>
+          </ChipWrapper>
+        );
+      })}
+
+      {/* 🔥 ONLY View All is animated */}
+      <Animated.View
+        style={{
+          transform: [{ scale: scaleAnim }],
+          shadowColor: "yellow",
+          shadowOpacity: glowAnim,
+          shadowRadius: 20,
+        }}
+      >
         <TouchableOpacity
-          activeOpacity={0.7}
+          activeOpacity={0.8}
           onPress={onPressViewAll}
           style={[
             styles.chip,
             styles.chipShadow,
             styles.viewAll,
-            { width: CHIP_WIDTH, alignItems: "center" },
+            {
+              width: CHIP_WIDTH,
+              alignItems: "center",
+              borderWidth: 2,
+              borderColor: "yellow",
+            },
           ]}
         >
-          <Text style={styles.viewAllText}>{t("viewall")}</Text>
+          <Text style={[styles.viewAllText, { color: "#bfa100" }]}>
+            {t("viewall")}
+          </Text>
         </TouchableOpacity>
-      </View>
-    );
-  }
+      </Animated.View>
+    </View>
+  );
+}
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#EEF3F9" }}>
