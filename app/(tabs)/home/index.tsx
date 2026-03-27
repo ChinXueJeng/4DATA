@@ -320,13 +320,13 @@ export default function HomeScreen() {
               toValue: 1.08,
               duration: 800,
               easing: Easing.inOut(Easing.ease),
-              useNativeDriver: false,
+              useNativeDriver: true,
             }),
             Animated.timing(scaleAnim, {
               toValue: 1,
               duration: 800,
               easing: Easing.inOut(Easing.ease),
-              useNativeDriver: false,
+              useNativeDriver: true,
             }),
           ]),
           Animated.sequence([
@@ -341,7 +341,7 @@ export default function HomeScreen() {
               useNativeDriver: false,
             }),
           ]),
-        ]),
+        ])
       ).start();
     }, []);
 
@@ -481,7 +481,30 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
-
+        <View style={[styles.jackpotCard, strongShadow]}>
+          <View style={styles.jackpotHeader}>
+            <Text style={styles.jackpotTitle}>ESTIMATED JACKPOT AMOUNT</Text>
+            <View style={styles.jackpotMeta}>
+              <Text style={styles.jackpotMetaText}>Draw Date: 28/03/2026, WEDNESDAY</Text>
+              <Text style={styles.jackpotMetaText}>Draw No: 6108/26</Text>
+            </View>
+          </View>
+          <View style={styles.jackpotRow}>
+            <Image source={require("@/assets/images/jackpot.png")} style={styles.jackpotLogo} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.jackpotLabel}>Jackpot 1</Text>
+              <Text style={styles.jackpotAmount}>RM18,111,000.00</Text>
+            </View>
+          </View>
+          <View style={styles.jackpotDivider} />
+          <View style={styles.jackpotRow}>
+            <Image source={require("@/assets/images/jackpot.png")} style={styles.jackpotLogo} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.jackpotLabel}>Jackpot 2</Text>
+              <Text style={styles.jackpotAmount}>RM488,000.00</Text>
+            </View>
+          </View>
+        </View>
         {/* High Probability */}
         <View
           style={[
@@ -498,6 +521,7 @@ export default function HomeScreen() {
             {t("highProbabilityNumbers")}
           </Text>
         </View>
+        {/* JACKPOT CARD */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <Text>{t("loadingnum")}</Text>
@@ -558,6 +582,63 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+
+  jackpotCard: {
+    backgroundColor: "#1a1a2e",
+    borderRadius: 12,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+  jackpotHeader: {
+    backgroundColor: "#660004",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+  },
+ jackpotTitle: {
+  color: "#fff",
+  fontWeight: "bold",
+  fontSize: 15,
+  textAlign: "center",
+  letterSpacing: 0.5,
+},
+  jackpotMeta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  jackpotMetaText: {
+    color: "#b7b7b7",
+    fontSize: 10,
+  },
+  jackpotRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fe0000",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 18,
+  },
+  jackpotLogo: {
+    width: 52,
+    height: 52,
+    borderRadius: 8,
+    marginLeft: 68,  
+  },
+  jackpotLabel: {
+    color: "#ffffffcc",
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  jackpotAmount: {
+    color: "#fff",
+    fontSize: 20,  
+    fontWeight: "bold",
+  },
+  jackpotDivider: {
+    height: 0.6,
+    backgroundColor: "#826a6a",
   },
   alertText: {
     fontSize: 16,

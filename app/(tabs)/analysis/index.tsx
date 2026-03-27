@@ -166,64 +166,72 @@ export default function AnalysisScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {Object.entries(results).map(([date, prizes], index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.card, styles.shadow]}
-            onPress={() => handleCardPress(prizes[0].draw_date)} // Use the original draw_date from the first prize
-          >
-            <Text style={styles.date}>
-              {t("pastresults")}
-              {date}
-            </Text>
-            <View style={styles.prizeContainer}>
-              {prizes
-                .sort((a, b) => parseInt(a.prize_type) - parseInt(b.prize_type))
-                .map((prize, idx) => {
-                  const boxStyle = [
-                    styles.prizeBox,
-                    prize.total_points !== null &&
-                      prize.total_points >= 85 && {
-                        backgroundColor: "#42ea61",
-                      },
-                    prize.total_points !== null &&
-                      prize.total_points >= 70 &&
-                      prize.total_points < 85 && { backgroundColor: "#a2ffb3" },
-                    prize.total_points !== null &&
-                      prize.total_points < 70 && { backgroundColor: "#fffbb5" },
-                  ];
+        {Object.entries(results).map(([date, prizes], index) => {
 
-                  // 🔥 FIRST CARD → ALL 3 NUMBERS GLOW
-                  if (index === 0) {
+          const isBestResult =
+            prizes.length === 3 &&
+            prizes.every(p => p.total_points !== null && p.total_points >= 90);
+
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[styles.card, styles.shadow]}
+              onPress={() => handleCardPress(prizes[0].draw_date)}
+            >
+              <View style={styles.topRow}>
+                <Text style={styles.date}>
+                  {t('pastresults')}{date}
+                </Text>
+
+                {isBestResult && (
+                  <Image
+                    source={require("@/assets/images/best result.png")}
+                    style={styles.bestLogo}
+                  />
+                )}
+              </View>
+              <View style={styles.prizeContainer}>
+                {prizes
+                  .sort((a, b) => parseInt(a.prize_type) - parseInt(b.prize_type))
+                  .map((prize, idx) => {
+                    const boxStyle = [
+                      styles.prizeBox,
+                      prize.total_points !== null && prize.total_points >= 85 && { backgroundColor: "#42ea61" },
+                      prize.total_points !== null && prize.total_points >= 70 && prize.total_points < 85 && { backgroundColor: "#a2ffb3" },
+                      prize.total_points !== null && prize.total_points < 70 && { backgroundColor: "#fffbb5" },
+                    ];
+
+                    if (index === 0) {
+                      return (
+                        <Animated.View
+                          key={idx}
+                          style={{
+                            transform: [{ scale: scaleAnim }],
+                            shadowColor: "yellow",
+                            shadowOpacity: glowAnim,
+                            shadowRadius: 20,
+                            elevation: 12,
+                          }}
+                        >
+                          <View style={boxStyle}>
+                            <Text style={styles.prizeNumber}>{prize.number}</Text>
+                          </View>
+                        </Animated.View>
+                      );
+                    }
+
                     return (
-                      <Animated.View
-                        key={idx}
-                        style={{
-                          transform: [{ scale: scaleAnim }],
-                          shadowColor: "yellow",
-                          shadowOpacity: glowAnim,
-                          shadowRadius: 20,
-                          elevation: 12,
-                        }}
-                      >
-                        <View style={boxStyle}>
-                          <Text style={styles.prizeNumber}>{prize.number}</Text>
-                        </View>
-                      </Animated.View>
+                      <View key={idx} style={boxStyle}>
+                        <Text style={styles.prizeNumber}>{prize.number}</Text>
+                      </View>
                     );
-                  }
-
-                  // ✅ Others normal
-                  return (
-                    <View key={idx} style={boxStyle}>
-                      <Text style={styles.prizeNumber}>{prize.number}</Text>
-                    </View>
-                  );
-                })}
-            </View>
-          </TouchableOpacity>
-        ))}
+                  })}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
+
     </View>
   );
 }
@@ -240,6 +248,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#eef2f7",
     paddingHorizontal: 16,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    height: 20,
+  },
+
+  bestLogo: {
+    width: 80,
+    height: 20,
+    resizeMode: "contain",
+    position: "absolute",
+    right: 10,
+    top: 0,
   },
 
   header: {
@@ -284,7 +308,7 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 13,
     color: "#555",
-    marginBottom: 10,
+    // marginBottom: 10,
   },
 
   row: {
