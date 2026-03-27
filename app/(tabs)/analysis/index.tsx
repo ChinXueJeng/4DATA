@@ -11,12 +11,11 @@ import {
   View,
 } from "react-native";
 
-import { useLanguage } from '@/app/contexts/LanguageContext';
+import { useLanguage } from "@/app/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 
 interface LotteryResult {
   draw_date: string;
@@ -37,13 +36,13 @@ const useGlowPulse = () => {
             toValue: 1.08,
             duration: 800,
             easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(scaleAnim, {
             toValue: 1,
             duration: 800,
             easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]),
         Animated.sequence([
@@ -58,7 +57,7 @@ const useGlowPulse = () => {
             useNativeDriver: false,
           }),
         ]),
-      ])
+      ]),
     ).start();
   }, []);
 
@@ -73,29 +72,28 @@ export default function AnalysisScreen() {
   const { t, currentLanguage } = useLanguage();
   const { scaleAnim, glowAnim } = useGlowPulse();
 
-
   // Function to format date based on current language
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (currentLanguage === 'zh') {
+    if (currentLanguage === "zh") {
       // Chinese date format: YYYY年M月D日
-      return new Intl.DateTimeFormat('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      return new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }).format(date);
     }
     // Default to English format: Month Day, Year
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
   };
 
   const handleCardPress = (date: string) => {
     // Format the date to YYYY-MM-DD for the URL
-    const formattedDate = new Date(date).toISOString().split('T')[0];
+    const formattedDate = new Date(date).toISOString().split("T")[0];
     router.push(`/analysis/analysis-details?date=${formattedDate}`);
   };
 
@@ -106,26 +104,29 @@ export default function AnalysisScreen() {
 
         // Fetch the 10 most recent lottery dates with their 1st, 2nd, and 3rd prizes and total_points
         const { data, error: fetchError } = await supabase
-          .from('result')
-          .select('draw_date, number, prize_type, total_points')
-          .in('prize_type', ['1', '2', '3'])
-          .order('draw_date', { ascending: false })
+          .from("result")
+          .select("draw_date, number, prize_type, total_points")
+          .in("prize_type", ["1", "2", "3"])
+          .order("draw_date", { ascending: false })
           .limit(42); // 10 dates * 3 prize types
         if (fetchError) throw fetchError;
         // Group results by date
-        const groupedResults = data.reduce((acc: Record<string, LotteryResult[]>, item) => {
-          const date = formatDate(item.draw_date);
+        const groupedResults = data.reduce(
+          (acc: Record<string, LotteryResult[]>, item) => {
+            const date = formatDate(item.draw_date);
 
-          if (!acc[date]) {
-            acc[date] = [];
-          }
-          acc[date].push(item);
-          return acc;
-        }, {} as Record<string, LotteryResult[]>);
+            if (!acc[date]) {
+              acc[date] = [];
+            }
+            acc[date].push(item);
+            return acc;
+          },
+          {} as Record<string, LotteryResult[]>,
+        );
         setResults(groupedResults);
       } catch (err) {
-        console.error('Error fetching results:', err);
-        setError('Failed to load lottery results');
+        console.error("Error fetching results:", err);
+        setError("Failed to load lottery results");
       } finally {
         setLoading(false);
       }
@@ -154,7 +155,7 @@ export default function AnalysisScreen() {
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={16} />
-          <Text style={styles.backText}>{t('back')}</Text>
+          <Text style={styles.backText}>{t("back")}</Text>
         </TouchableOpacity>
         <Image
           source={require("@/assets/images/TotoLOGO.png")}
@@ -171,16 +172,25 @@ export default function AnalysisScreen() {
             style={[styles.card, styles.shadow]}
             onPress={() => handleCardPress(prizes[0].draw_date)} // Use the original draw_date from the first prize
           >
-            <Text style={styles.date}>{t('pastresults')}{date}</Text>
+            <Text style={styles.date}>
+              {t("pastresults")}
+              {date}
+            </Text>
             <View style={styles.prizeContainer}>
               {prizes
                 .sort((a, b) => parseInt(a.prize_type) - parseInt(b.prize_type))
                 .map((prize, idx) => {
                   const boxStyle = [
                     styles.prizeBox,
-                    prize.total_points !== null && prize.total_points >= 85 && { backgroundColor: "#42ea61" },
-                    prize.total_points !== null && prize.total_points >= 70 && prize.total_points < 85 && { backgroundColor: "#a2ffb3" },
-                    prize.total_points !== null && prize.total_points < 70 && { backgroundColor: "#fffbb5" },
+                    prize.total_points !== null &&
+                      prize.total_points >= 85 && {
+                        backgroundColor: "#42ea61",
+                      },
+                    prize.total_points !== null &&
+                      prize.total_points >= 70 &&
+                      prize.total_points < 85 && { backgroundColor: "#a2ffb3" },
+                    prize.total_points !== null &&
+                      prize.total_points < 70 && { backgroundColor: "#fffbb5" },
                   ];
 
                   // 🔥 FIRST CARD → ALL 3 NUMBERS GLOW
@@ -210,10 +220,7 @@ export default function AnalysisScreen() {
                     </View>
                   );
                 })}
-
-
             </View>
-
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -227,7 +234,6 @@ const shadow = {
   shadowRadius: 5,
   elevation: 8,
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -327,10 +333,9 @@ const styles = StyleSheet.create({
   shadow: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5, // for Android
-    backgroundColor: 'white', // Important for shadow to show on iOS
+    backgroundColor: "white", // Important for shadow to show on iOS
   },
 });
-

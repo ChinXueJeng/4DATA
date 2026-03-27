@@ -20,7 +20,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 // Generate a consistent daily lucky number for the user
 const useDailyLuckyNumber = (userId: string): number => {
   const [luckyNumber, setLuckyNumber] = useState<number>(0);
@@ -109,8 +108,8 @@ const useNextDrawNumbers = () => {
         // If data exists, randomly pick 20 items
         const prob90 = allProbData
           ? allProbData
-            .sort(() => Math.random() - 0.5) // Shuffle array
-            .slice(0, 20)
+              .sort(() => Math.random() - 0.5) // Shuffle array
+              .slice(0, 20)
           : null;
 
         // Fetch 5 numbers with prob between 80 and 89
@@ -123,8 +122,8 @@ const useNextDrawNumbers = () => {
         // If data exists, randomly pick 20 items
         const prob80 = allProbData2
           ? allProbData2
-            .sort(() => Math.random() - 0.5) // Shuffle array
-            .slice(0, 12)
+              .sort(() => Math.random() - 0.5) // Shuffle array
+              .slice(0, 12)
           : null;
 
         // Fetch 5 numbers with prob between 70 and 79
@@ -137,8 +136,8 @@ const useNextDrawNumbers = () => {
         // If data exists, randomly pick 20 items
         const prob70 = allProbData3
           ? allProbData3
-            .sort(() => Math.random() - 0.5) // Shuffle array
-            .slice(0, 3)
+              .sort(() => Math.random() - 0.5) // Shuffle array
+              .slice(0, 3)
           : null;
 
         if (error90 || error80 || error70) throw error90 || error80 || error70;
@@ -191,19 +190,19 @@ const useNextDrawDate = () => {
 
   // Get localized date format based on language
   const getLocalizedDate = (date: Date) => {
-    if (currentLanguage === 'zh') {
+    if (currentLanguage === "zh") {
       // Chinese date format: YYYY年M月D日
-      return new Intl.DateTimeFormat('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      return new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }).format(date);
     }
     // Default to English format: Month Day, Year
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
   };
 
@@ -220,8 +219,8 @@ const useNextDrawDate = () => {
           currentHour < 21
             ? today
             : new Date(now.setDate(now.getDate() + 1))
-              .toISOString()
-              .split("T")[0];
+                .toISOString()
+                .split("T")[0];
         const { data, error } = await supabase
           .from("lotterydate")
           .select("date")
@@ -286,20 +285,16 @@ export default function HomeScreen() {
 
   const handleViewAllPress = useCallback(() => {
     if (!userId || userId === "default") {
-      Alert.alert(
-        t("loginRequired"),
-        t("pleaseLoginToViewAll"),
-        [
-          {
-            text: t("cancel"),
-            style: "cancel",
-          },
-          {
-            text: t("login"),
-            onPress: () => router.replace("/(auth)/login"),
-          },
-        ]
-      );
+      Alert.alert(t("loginRequired"), t("pleaseLoginToViewAll"), [
+        {
+          text: t("cancel"),
+          style: "cancel",
+        },
+        {
+          text: t("login"),
+          onPress: () => router.replace("/(auth)/login"),
+        },
+      ]);
       return;
     }
 
@@ -314,107 +309,107 @@ export default function HomeScreen() {
     }
   }, [isSubscribed, router, userId]);
   const useGlowPulse = () => {
-  const scaleAnim = React.useRef(new Animated.Value(1)).current;
-  const glowAnim = React.useRef(new Animated.Value(0.3)).current;
+    const scaleAnim = React.useRef(new Animated.Value(1)).current;
+    const glowAnim = React.useRef(new Animated.Value(0.3)).current;
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 1.08,
-            duration: 800,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 800,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
+    useEffect(() => {
+      Animated.loop(
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(scaleAnim, {
+              toValue: 1.08,
+              duration: 800,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: false,
+            }),
+            Animated.timing(scaleAnim, {
+              toValue: 1,
+              duration: 800,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: false,
+            }),
+          ]),
+          Animated.sequence([
+            Animated.timing(glowAnim, {
+              toValue: 1,
+              duration: 800,
+              useNativeDriver: false,
+            }),
+            Animated.timing(glowAnim, {
+              toValue: 0.3,
+              duration: 800,
+              useNativeDriver: false,
+            }),
+          ]),
         ]),
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: false,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0.3,
-            duration: 800,
-            useNativeDriver: false,
-          }),
-        ]),
-      ])
-    ).start();
-  }, []);
+      ).start();
+    }, []);
 
-  return { scaleAnim, glowAnim };
-};
+    return { scaleAnim, glowAnim };
+  };
 
-function ChipGrid({ data, onPressChip, onPressViewAll }: ChipGridProps) {
-  const { scaleAnim, glowAnim } = useGlowPulse();
+  function ChipGrid({ data, onPressChip, onPressViewAll }: ChipGridProps) {
+    const { scaleAnim, glowAnim } = useGlowPulse();
 
-  return (
-    <View style={styles.grid}>
-      {/* ✅ Normal chips (NO animation) */}
-      {data.slice(0, 40).map((item) => {
-        const ChipWrapper = onPressChip ? TouchableOpacity : View;
+    return (
+      <View style={styles.grid}>
+        {/* ✅ Normal chips (NO animation) */}
+        {data.slice(0, 40).map((item) => {
+          const ChipWrapper = onPressChip ? TouchableOpacity : View;
 
-        return (
-          <ChipWrapper
-            key={item.id}
-            activeOpacity={0.7}
-            onPress={() => onPressChip?.(item)}
+          return (
+            <ChipWrapper
+              key={item.id}
+              activeOpacity={0.7}
+              onPress={() => onPressChip?.(item)}
+              style={[
+                styles.chip,
+                styles.chipShadow,
+                { width: CHIP_WIDTH, alignItems: "center" },
+                item.color === "yellow"
+                  ? styles.chipYellow
+                  : item.color === "lightGreen"
+                    ? styles.chipLightGreen
+                    : styles.chipGreen,
+              ]}
+            >
+              <Text style={styles.chipText}>{item.number}</Text>
+            </ChipWrapper>
+          );
+        })}
+
+        {/* 🔥 ONLY View All is animated */}
+        <Animated.View
+          style={{
+            transform: [{ scale: scaleAnim }],
+            shadowColor: "yellow",
+            shadowOpacity: glowAnim,
+            shadowRadius: 20,
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onPressViewAll}
             style={[
               styles.chip,
               styles.chipShadow,
-              { width: CHIP_WIDTH, alignItems: "center" },
-              item.color === "yellow"
-                ? styles.chipYellow
-                : item.color === "lightGreen"
-                ? styles.chipLightGreen
-                : styles.chipGreen,
+              styles.viewAll,
+              {
+                width: CHIP_WIDTH,
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor: "yellow",
+              },
             ]}
           >
-            <Text style={styles.chipText}>{item.number}</Text>
-          </ChipWrapper>
-        );
-      })}
-
-      {/* 🔥 ONLY View All is animated */}
-      <Animated.View
-        style={{
-          transform: [{ scale: scaleAnim }],
-          shadowColor: "yellow",
-          shadowOpacity: glowAnim,
-          shadowRadius: 20,
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={onPressViewAll}
-          style={[
-            styles.chip,
-            styles.chipShadow,
-            styles.viewAll,
-            {
-              width: CHIP_WIDTH,
-              alignItems: "center",
-              borderWidth: 2,
-              borderColor: "yellow",
-            },
-          ]}
-        >
-          <Text style={[styles.viewAllText, { color: "#bfa100" }]}>
-            {t("viewall")}
-          </Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </View>
-  );
-}
+            <Text style={[styles.viewAllText, { color: "#bfa100" }]}>
+              {t("viewall")}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#EEF3F9" }}>
