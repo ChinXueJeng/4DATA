@@ -1,8 +1,19 @@
 
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useBrand } from "@/app/contexts/BrandContext";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from "react";
+import {
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Generate a consistent daily lucky number for the user
 const useDailyLuckyNumber = (userId: string): number => {
@@ -23,20 +34,20 @@ const useDailyLuckyNumber = (userId: string): number => {
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
         const storageKey = `lucky_number_${userId}_${today}`;
-        
+
         // Try to get today's number from secure storage
         const storedNumber = await SecureStore.getItemAsync(storageKey);
-        
+
         if (storedNumber) {
           setLuckyNumber(parseInt(storedNumber, 10));
         } else {
           // Generate a new 4-digit number (1000-9999)
           const newNumber = Math.floor(1000 + Math.random() * 9000);
-          
+
           // Store the new number for today
           await SecureStore.setItemAsync(storageKey, newNumber.toString());
           setLuckyNumber(newNumber);
-          
+
           // Clear yesterday's number if it exists
           const yesterday = new Date();
           yesterday.setDate(yesterday.getDate() - 1);
@@ -55,16 +66,6 @@ const useDailyLuckyNumber = (userId: string): number => {
 
   return luckyNumber;
 };
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-  Image,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 type NumberItem = {
   id: number;
@@ -93,7 +94,7 @@ const useNextDrawNumbers = () => {
       try {
         setLoading(true);
         console.log('🚀 Fetching numbers from Supabase...');
-        
+
         // Fetch all data with prob >= 80
         const { data: allProbData, error: error90 } = await supabase
           .from('nextDrawProb')
@@ -102,10 +103,10 @@ const useNextDrawNumbers = () => {
           .lt('prob', 100);
 
         // If data exists, randomly pick 20 items
-        const prob90 = allProbData ? 
+        const prob90 = allProbData ?
           allProbData
             .sort(() => Math.random() - 0.5) // Shuffle array
-            .slice(0, 20) : 
+            .slice(0, 20) :
           null;
 
         // Fetch 5 numbers with prob between 80 and 89
@@ -114,14 +115,14 @@ const useNextDrawNumbers = () => {
           .select('number, prob')
           .gte('prob', 75)
           .lt('prob', 85)
-        
-          // If data exists, randomly pick 20 items
-        const prob80 = allProbData2 ? 
+
+        // If data exists, randomly pick 20 items
+        const prob80 = allProbData2 ?
           allProbData2
             .sort(() => Math.random() - 0.5) // Shuffle array
-            .slice(0, 12) : 
+            .slice(0, 12) :
           null;
-          
+
         // Fetch 5 numbers with prob between 70 and 79
         const { data: allProbData3, error: error70 } = await supabase
           .from('nextDrawProb')
@@ -129,13 +130,13 @@ const useNextDrawNumbers = () => {
           .gte('prob', 60)
           .lt('prob', 75)
 
-          // If data exists, randomly pick 20 items
-        const prob70 = allProbData3 ? 
+        // If data exists, randomly pick 20 items
+        const prob70 = allProbData3 ?
           allProbData3
             .sort(() => Math.random() - 0.5) // Shuffle array
-            .slice(0, 3) : 
+            .slice(0, 3) :
           null;
-          
+
         if (error90 || error80 || error70) throw error90 || error80 || error70;
 
         // Combine all results
@@ -177,7 +178,7 @@ const useNextDrawDate = () => {
         const now = new Date();
         const currentHour = now.getHours();
         const today = now.toISOString().split('T')[0];
-        
+
         // If it's before 9 PM, check for today's draw
         // If it's after 9 PM, check from tomorrow
         const startDate = currentHour < 21 ? today : new Date(now.setDate(now.getDate() + 1)).toISOString().split('T')[0];
@@ -188,7 +189,7 @@ const useNextDrawDate = () => {
           .order('date', { ascending: true })
           .limit(1);
         if (error) throw error;
-        
+
         if (data && data.length > 0) {
           const date = new Date(data[0].date);
           // If the date is today and it's before 9 PM, show "Today"
@@ -234,6 +235,7 @@ export default function HomeScreen() {
   const SCREEN_WIDTH = Dimensions.get("window").width;
   const GRID_PADDING = 20 * 2; // container padding
   const GAP = 10;
+  const { selectedBrand, setSelectedBrand } = useBrand();
   const CHIP_WIDTH = (SCREEN_WIDTH - GRID_PADDING - GAP * 3) / 4;
 
   function ChipGrid({ data, onPressChip, onPressViewAll }: ChipGridProps) {
@@ -254,8 +256,8 @@ export default function HomeScreen() {
                 item.color === "yellow"
                   ? styles.chipYellow
                   : item.color === "lightGreen"
-                  ? styles.chipLightGreen
-                  : styles.chipGreen,
+                    ? styles.chipLightGreen
+                    : styles.chipGreen,
               ]}
             >
               <Text style={styles.chipText}>{item.number}</Text>
@@ -280,42 +282,60 @@ export default function HomeScreen() {
     );
   }
 
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#EEF3F9" }}>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.imageContainer}>
+
+            {/* MAGNUM LOGO */}
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedBrand("MAGNUM");
+                router.replace("/(tabs)/home/index_magnum");
+              }}
+
+            >
               <Image
                 source={require("@/assets/images/magnumLOGO.png")}
                 style={{ height: 50, width: 50, borderRadius: 10 }}
               />
-            <TouchableOpacity 
-              onPress={() => router.replace('/(tabs)/home')}
-            >
-            <Image
-              source={require("@/assets/images/TotoLOGO.png")}
-              style={{ height: 50, width: 50, borderRadius: 10 }}
-            />
             </TouchableOpacity>
-    
-            </View>
-          <View>
-            <Text style={styles.subText}>Next Draw:</Text>
-            <Text style={styles.title}>{nextDrawDate || 'Loading...'}</Text>
+
+            {/* TOTO LOGO */}
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedBrand("TOTO");   // ← add this line
+                router.replace("/(tabs)/home");
+              }}
+            >
+              <Image
+                source={require("@/assets/images/TotoLOGO.png")}
+                style={{ height: 50, width: 50, borderRadius: 10 }}
+              />
+            </TouchableOpacity>
+
           </View>
-          
+
+
+          <View>
+            <Text style={styles.subText}>Next Draw</Text>
+            <Text style={styles.title}>{nextDrawDate || "Loading..."}</Text>
+          </View>
         </View>
+
 
         {/* Lucky Number * Upset Level*/}
         <View style={styles.secondheader}>
           <View style={[styles.upsetBox, strongShadow]}>
-            <Text style={[styles.luckyText, { marginBottom: 4 }]}>Upset Level:</Text>
-            <Text style={{ color: "#fff", fontSize: 21, fontWeight: "bold", textAlign: "center" }}>LOW</Text>
+            <Text style={[styles.luckyText, { marginBottom: 4 }]}>Select:</Text>
+            <Text style={{ color: "#000000", fontSize: 21, fontWeight: "bold", textAlign: "center" }}> MAGNUM</Text>
           </View>
           <View style={[styles.luckyBox, strongShadow]}>
             <Text style={[styles.luckyText, { marginBottom: 4 }]}>Your Lucky Number:</Text>
-            <Text style={{ color: "#fff", fontSize: 23, fontWeight: "bold", textAlign: "center" }}>{luckyNumber}</Text>
+            <Text style={{ color: "#000000", fontSize: 23, fontWeight: "bold", textAlign: "center" }}>{luckyNumber}</Text>
           </View>
         </View>
 
@@ -323,7 +343,7 @@ export default function HomeScreen() {
         <View
           style={[
             {
-              backgroundColor: "#ffff00",
+              backgroundColor: "white",
               padding: 20,
               borderRadius: 10,
               marginBottom: 20,
@@ -346,7 +366,7 @@ export default function HomeScreen() {
         ) : (
           <ChipGrid
             data={topNumbers}
-            onPressChip={(item) => router.push(`/(tabs)/home/number-details?number=${item.number}`)}
+            onPressChip={(item) => router.push(`/(tabs)/home/number-details-magnum?number=${item.number}`)}
             onPressViewAll={() => router.push({
               pathname: "/(tabs)/home/view-all",
               params: { source: 'magnum' }
@@ -354,7 +374,7 @@ export default function HomeScreen() {
           />
         )}
 
-        
+
         {/* bottom spacing for tab bar */}
         <View style={{ height: 120 }} />
       </ScrollView>
@@ -388,9 +408,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   container: {
-   flex: 1,
-  backgroundColor: "#EEF3F9",
-  padding: 16,
+    flex: 1,
+    backgroundColor: "#EEF3F9",
+    padding: 16,
   },
 
   header: {
@@ -425,35 +445,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   luckyBox: {
-    backgroundColor: "#000",
+    backgroundColor: "#FFD700", // ✅ gold color
     padding: 5,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    flex: 0.5, // This will make both boxes take equal width
-    minHeight: 80, // Set a minimum height
+    flex: 0.5,
+    minHeight: 80,
+    borderWidth: 1,          // ✅ add this
+    borderColor: "#000000",  // ✅ black border
   },
+
   upsetBox: {
-    backgroundColor: "#000",
+    backgroundColor: "#FFD700", // ✅ gold color
     padding: 5,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    flex: 0.5, // This will make both boxes take equal width
-    minHeight: 80, // Set a minimum height
+    flex: 0.5,
+    minHeight: 80,
+    borderWidth: 1,          // ✅ add this
+    borderColor: "#000000",  // ✅ black border
   },
+
 
   luckyText: {
-    color: "#fff",
+    color: "#000000",
     fontSize: 15,
     textAlign: "center",
-  lineHeight: 20, // Ensure proper line height
+    lineHeight: 20, // Ensure proper line height
   },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#dabf27",
     borderRadius: 10,
     padding: 14,
     marginBottom: 16,
@@ -525,8 +550,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   imageContainer: {
-  flexDirection: "row",     // Keep images in a row
-  alignItems: "center",     // Center images vertically
-  gap: 10,                  // Add some space between images
-},
+    flexDirection: "row",     // Keep images in a row
+    alignItems: "center",     // Center images vertically
+    gap: 10,                  // Add some space between images
+  },
 });

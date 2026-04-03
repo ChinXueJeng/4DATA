@@ -1,14 +1,20 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 
+import { useBrand } from "@/app/contexts/BrandContext";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export default function TabLayout() {
+  const { selectedBrand } = useBrand(); 
+
+  const bgColor =
+    selectedBrand === "MAGNUM" ? "#ffd700" : "#d60000ff";
+
   return (
     <Tabs
-	  initialRouteName="home"
+      initialRouteName="home"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -21,15 +27,13 @@ export default function TabLayout() {
           right: 16,
           height: 64,
           borderRadius: 32,
-          backgroundColor: "#d60000ff",
+          backgroundColor: bgColor, 
           borderTopWidth: 0,
           marginHorizontal: 20,
-
           paddingBottom: 0,
           paddingTop: 0,
         },
 
-        // 🔥 THIS FIXES CENTERING
         tabBarItemStyle: {
           height: "100%",
           justifyContent: "center",
@@ -47,18 +51,11 @@ export default function TabLayout() {
         name="home"
         options={{
           tabBarIcon: ({ focused }) => (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
               <IconSymbol
                 name="house.fill"
                 size={30}
                 color={focused ? "#fff" : "rgba(255,255,255,0.6)"}
-                
               />
             </View>
           ),

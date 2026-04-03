@@ -21,9 +21,9 @@ export default function Paywall() {
         const offerings = await Purchases.getOfferings();
         if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
           setPackages(offerings.current.availablePackages);
-
-          // Select annual by default if available, else first
-          const annual = offerings.current.availablePackages.find(p => p.packageType === Purchases.PACKAGE_TYPE.ANNUAL);
+          const annual = offerings.current.availablePackages.find(
+            p => p.packageType === Purchases.PACKAGE_TYPE.ANNUAL
+          );
           setSelectedPackage(annual || offerings.current.availablePackages[0]);
         }
       } catch (e) {
@@ -42,13 +42,11 @@ export default function Paywall() {
     try {
       const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
       if (typeof customerInfo.entitlements.active['premium'] !== "undefined") {
-        console.log(`Purchase completed for ${selectedPackage.identifier}`);
         await handleSubscriptionChange();
         router.back();
       }
     } catch (e: any) {
       if (!e.userCancelled) {
-        console.error(e);
         Alert.alert("Purchase Failed", e.message);
       }
     } finally {
@@ -61,7 +59,6 @@ export default function Paywall() {
     try {
       const customerInfo = await Purchases.restorePurchases();
       if (typeof customerInfo.entitlements.active['premium'] !== "undefined") {
-        console.log("Restore completed");
         await handleSubscriptionChange();
         Alert.alert("Success", "Your purchases have been restored.");
         router.back();
@@ -69,7 +66,6 @@ export default function Paywall() {
         Alert.alert("No Subscriptions", "We could not find any active premium subscriptions for this account.");
       }
     } catch (e: any) {
-      console.error(e);
       Alert.alert("Restore Failed", e.message);
     } finally {
       setIsPurchasing(false);
@@ -78,12 +74,11 @@ export default function Paywall() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+
       <View style={styles.container}>
+
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>4Data Premium</Text>
           <Text style={styles.subtitle}>
@@ -91,6 +86,7 @@ export default function Paywall() {
           </Text>
         </View>
 
+        {/* Image */}
         <View style={styles.imageContainer}>
           <Image
             source={require('../assets/images/paywall.png')}
@@ -99,58 +95,83 @@ export default function Paywall() {
           />
         </View>
 
+        {/* Bottom Section */}
         <View style={styles.bottomSection}>
+
+          {/* Plan Cards */}
           <View style={styles.plansContainer}>
             {isLoading ? (
-              <ActivityIndicator size="large" color="#e00000" style={{ marginVertical: 30, alignSelf: 'center', flex: 1 }} />
+              <ActivityIndicator
+                size="large"
+                color="#e00000"
+                style={{ marginVertical: 30, alignSelf: 'center', flex: 1 }}
+              />
             ) : packages.length === 0 ? (
-              <Text style={{ textAlign: 'center', marginVertical: 30, flex: 1 }}>No subscription plans found. Make sure offerings are configured in RevenueCat.</Text>
+              <Text style={{ textAlign: 'center', marginVertical: 30, flex: 1, color: '#444' }}>
+                No subscription plans found.
+              </Text>
             ) : (
               packages.map((pkg) => {
                 const isSelected = selectedPackage?.identifier === pkg.identifier;
                 const isAnnual = pkg.packageType === Purchases.PACKAGE_TYPE.ANNUAL;
-
-                // Clean up title to remove App Store metadata like "(App Name)"
-                const displayTitle = pkg.packageType.toString();
+                const displayTitle = isAnnual ? 'ANNUAL' : 'MONTHLY';
 
                 return (
                   <TouchableOpacity
                     key={pkg.identifier}
                     style={[
                       styles.planCard,
-                      isSelected ? styles.planCardSelected : styles.planCardUnselected
+                      isSelected ? styles.planCardSelected : styles.planCardUnselected,
                     ]}
                     onPress={() => setSelectedPackage(pkg)}
                     activeOpacity={0.8}
                   >
+                    {/* BEST VALUE badge — only on annual */}
                     {isAnnual && (
-                      <View style={[styles.discountBadge, { borderColor: '#000', borderWidth: 1.5 }]}>
-                        <Text style={styles.discountText}>BEST VALUE</Text>
+                      <View style={styles.bestValueBadge}>
+                        <Text style={styles.bestValueText}>BEST VALUE</Text>
                       </View>
                     )}
 
-                    <View style={[styles.planHeaderRow, !isAnnual && { marginTop: 4 }]}>
-                      <Text style={styles.planTitle}>{displayTitle}</Text>
+                    {/* Title + checkmark row */}
+                    <View style={styles.planHeaderRow}>
+                      <Text style={[
+                        styles.planTitle,
+                        isSelected ? styles.planTitleSelected : styles.planTitleUnselected,
+                      ]}>
+                        {displayTitle}
+                      </Text>
+
                       {isSelected ? (
                         <View style={styles.checkCircleActive}>
-                          <Ionicons name="checkmark" size={14} color="white" />
+                          <Ionicons name="checkmark" size={15} color="white" />
                         </View>
                       ) : (
                         <View style={styles.checkCircleInactive} />
                       )}
                     </View>
-                    <Text style={styles.planPrice}>{pkg.product.priceString}</Text>
-                    <Text style={styles.planSubtext}>{pkg.product.description}</Text>
+
+                    {/* Price */}
+                    <Text style={styles.planPrice}>
+                      {pkg.product.priceString}
+                    </Text>
+
+                    {/* Description */}
+                    <Text style={styles.planSubtext}>
+                      {pkg.product.description}
+                    </Text>
                   </TouchableOpacity>
                 );
               })
             )}
           </View>
 
+          {/* CTA Button */}
           <TouchableOpacity
             style={[styles.ctaButton, isPurchasing && { opacity: 0.7 }]}
             onPress={handlePurchase}
             disabled={isPurchasing || packages.length === 0 || !selectedPackage}
+            activeOpacity={0.85}
           >
             {isPurchasing ? (
               <ActivityIndicator color="white" />
@@ -163,14 +184,18 @@ export default function Paywall() {
             )}
           </TouchableOpacity>
 
+          {/* Footer */}
           <View style={styles.footerLinks}>
             <TouchableOpacity onPress={handleRestore} disabled={isPurchasing}>
               <Text style={styles.footerLinkText}>Restore Purchases</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
+            >
               <Text style={styles.footerLinkText}>Terms and conditions</Text>
             </TouchableOpacity>
           </View>
+
         </View>
       </View>
     </SafeAreaView>
@@ -186,11 +211,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
+
+  /* ── Header ── */
   header: {
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 16,
   },
   title: {
     fontSize: 28,
@@ -200,118 +227,147 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#333333',
+    color: '#444444',
     textAlign: 'center',
     lineHeight: 20,
   },
+
+  /* ── Image ── */
   imageContainer: {
     flex: 1,
-    backgroundColor: '#fff',
     width: '100%',
+    backgroundColor: '#fff',
   },
   image: {
     width: '100%',
     height: '100%',
   },
+
+  /* ── Bottom ── */
   bottomSection: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
     backgroundColor: '#ffffff',
   },
+
+  /* ── Plan Cards ── */
   plansContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
     gap: 12,
+    marginBottom: 20,
   },
   planCard: {
     flex: 1,
-    borderWidth: 1.5,
-    borderRadius: 8,
-    padding: 16,
+    borderWidth: 2,
+    borderRadius: 14,
+    padding: 14,
+    paddingTop: 20,       // extra top padding so badge doesn't overlap text
     position: 'relative',
-    minHeight: 110,
-    justifyContent: 'center',
+    minHeight: 120,
   },
   planCardSelected: {
     borderColor: '#e00000',
-    backgroundColor: '#f6f6f6',
+    backgroundColor: '#ffffff',
   },
   planCardUnselected: {
-    borderColor: '#d0d0d0',
-    backgroundColor: '#f2f2f2',
+    borderColor: '#e0e0e0',
+    backgroundColor: '#f7f7f7',
   },
-  discountBadge: {
+
+  /* ── BEST VALUE badge ── */
+  bestValueBadge: {
     position: 'absolute',
-    top: -12,
-    left: 20,
+    top: -13,
+    left: 12,
     backgroundColor: '#e00000',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 12,
-    zIndex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 20,
+    zIndex: 2,
   },
-  discountText: {
+  bestValueText: {
     color: '#ffffff',
     fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
+
+  /* ── Plan header row ── */
   planHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   planTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  planTitleSelected: {
     color: '#000000',
   },
+  planTitleUnselected: {
+    color: '#222222',
+  },
+
+  /* ── Checkmark circles ── */
   checkCircleActive: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#e00000',
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkCircleInactive: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: '#b0b0b0',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#cccccc',
     backgroundColor: 'transparent',
   },
+
+  /* ── Price & subtext ── */
   planPrice: {
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#000000',
     marginBottom: 4,
   },
   planSubtext: {
     fontSize: 12,
     color: '#888888',
+    lineHeight: 16,
   },
+
+  /* ── CTA Button ── */
   ctaButton: {
     backgroundColor: '#e00000',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: 18,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
+    shadowColor: '#e00000',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
   ctaButtonText: {
     color: '#ffffff',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
+
+  /* ── Footer ── */
   footerLinks: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 10,
-    marginBottom: 10,
   },
   footerLinkText: {
     fontSize: 12,

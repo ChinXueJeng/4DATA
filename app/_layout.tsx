@@ -1,3 +1,4 @@
+import { BrandProvider } from "@/app/contexts/BrandContext";
 import { LanguageProvider } from "@/app/contexts/LanguageContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -43,9 +44,10 @@ export default function RootLayout() {
     );
   }
 
-  return (
-    <LanguageProvider>
-      <SubscriptionProvider>
+return (
+  <LanguageProvider>
+    <SubscriptionProvider>
+      <BrandProvider>
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
@@ -60,7 +62,9 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
-      </SubscriptionProvider>
-    </LanguageProvider>
-  );
+      </BrandProvider>
+    </SubscriptionProvider>
+  </LanguageProvider>
+);
+
 }

@@ -1,3 +1,4 @@
+import { useBrand } from "@/app/contexts/BrandContext";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/lib/supabase";
@@ -92,6 +93,7 @@ const useNextDrawNumbers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
   useEffect(() => {
     const fetchTopNumbers = async () => {
       try {
@@ -108,8 +110,8 @@ const useNextDrawNumbers = () => {
         // If data exists, randomly pick 20 items
         const prob90 = allProbData
           ? allProbData
-              .sort(() => Math.random() - 0.5) // Shuffle array
-              .slice(0, 20)
+            .sort(() => Math.random() - 0.5) // Shuffle array
+            .slice(0, 20)
           : null;
 
         // Fetch 5 numbers with prob between 80 and 89
@@ -122,8 +124,8 @@ const useNextDrawNumbers = () => {
         // If data exists, randomly pick 20 items
         const prob80 = allProbData2
           ? allProbData2
-              .sort(() => Math.random() - 0.5) // Shuffle array
-              .slice(0, 12)
+            .sort(() => Math.random() - 0.5) // Shuffle array
+            .slice(0, 12)
           : null;
 
         // Fetch 5 numbers with prob between 70 and 79
@@ -136,8 +138,8 @@ const useNextDrawNumbers = () => {
         // If data exists, randomly pick 20 items
         const prob70 = allProbData3
           ? allProbData3
-              .sort(() => Math.random() - 0.5) // Shuffle array
-              .slice(0, 3)
+            .sort(() => Math.random() - 0.5) // Shuffle array
+            .slice(0, 3)
           : null;
 
         if (error90 || error80 || error70) throw error90 || error80 || error70;
@@ -219,8 +221,8 @@ const useNextDrawDate = () => {
           currentHour < 21
             ? today
             : new Date(now.setDate(now.getDate() + 1))
-                .toISOString()
-                .split("T")[0];
+              .toISOString()
+              .split("T")[0];
         const { data, error } = await supabase
           .from("lotterydate")
           .select("date")
@@ -256,6 +258,7 @@ export default function HomeScreen() {
   const nextDrawDate = useNextDrawDate();
   const { t } = useLanguage();
 
+
   const showCustomAlert = (message: string) => {
     setAlertMessage(message);
     setShowAlert(true);
@@ -281,6 +284,7 @@ export default function HomeScreen() {
   const SCREEN_WIDTH = Dimensions.get("window").width;
   const GRID_PADDING = 20 * 2; // container padding
   const GAP = 10;
+  const { selectedBrand, setSelectedBrand } = useBrand();
   const CHIP_WIDTH = (SCREEN_WIDTH - GRID_PADDING - GAP * 3) / 4;
 
   const handleViewAllPress = useCallback(() => {
@@ -349,7 +353,6 @@ export default function HomeScreen() {
   };
 
   function ChipGrid({ data, onPressChip, onPressViewAll }: ChipGridProps) {
-    const { scaleAnim, glowAnim } = useGlowPulse();
 
     return (
       <View style={styles.grid}>
@@ -378,15 +381,7 @@ export default function HomeScreen() {
           );
         })}
 
-        {/* 🔥 ONLY View All is animated */}
-        <Animated.View
-          style={{
-            transform: [{ scale: scaleAnim }],
-            shadowColor: "yellow",
-            shadowOpacity: glowAnim,
-            shadowRadius: 20,
-          }}
-        >
+        <View>
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onPressViewAll}
@@ -398,7 +393,7 @@ export default function HomeScreen() {
                 width: CHIP_WIDTH,
                 alignItems: "center",
                 borderWidth: 2,
-                borderColor: "yellow",
+                borderColor: "white",
               },
             ]}
           >
@@ -406,7 +401,8 @@ export default function HomeScreen() {
               {t("viewall")}
             </Text>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
+
       </View>
     );
   }
@@ -431,17 +427,36 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.imageContainer}>
-            <TouchableOpacity onPress={() => showCustomAlert(t("comingsoon"))}>
+
+            {/* MAGNUM LOGO */}
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedBrand("MAGNUM");
+                router.replace("/(tabs)/home/index_magnum");
+              }}
+            >
               <Image
                 source={require("@/assets/images/magnumLOGO.png")}
                 style={{ height: 50, width: 50, borderRadius: 10 }}
               />
             </TouchableOpacity>
-            <Image
-              source={require("@/assets/images/TotoLOGO.png")}
-              style={{ height: 50, width: 50, borderRadius: 10 }}
-            />
+
+            {/* TOTO LOGO */}
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedBrand("TOTO");
+                router.replace("/(tabs)/home");
+              }}
+
+            >
+              <Image
+                source={require("@/assets/images/TotoLOGO.png")}
+                style={{ height: 50, width: 50, borderRadius: 10 }}
+              />
+            </TouchableOpacity>
+
           </View>
+
           <View>
             <Text style={styles.subText}>{t("nextDraw")}</Text>
             <Text style={styles.title}>{nextDrawDate || "Loading..."}</Text>
@@ -596,13 +611,13 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 10,
   },
- jackpotTitle: {
-  color: "#fff",
-  fontWeight: "bold",
-  fontSize: 15,
-  textAlign: "center",
-  letterSpacing: 0.5,
-},
+  jackpotTitle: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 15,
+    textAlign: "center",
+    letterSpacing: 0.5,
+  },
   jackpotMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -624,7 +639,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 8,
-    marginLeft: 68,  
+    marginLeft: 68,
   },
   jackpotLabel: {
     color: "#ffffffcc",
@@ -633,7 +648,7 @@ const styles = StyleSheet.create({
   },
   jackpotAmount: {
     color: "#fff",
-    fontSize: 20,  
+    fontSize: 20,
     fontWeight: "bold",
   },
   jackpotDivider: {
