@@ -15,7 +15,6 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-// Adjust this to roughly match your video duration in milliseconds
 const VIDEO_DURATION_MS = 3000;
 
 function FullscreenVideo({ onReady }: { onReady?: () => void }) {
@@ -31,7 +30,7 @@ function FullscreenVideo({ onReady }: { onReady?: () => void }) {
                     zIndex: 0,
                 }}
                 autoPlay
-                muted          // ← removed loop
+                muted
                 playsInline
                 onCanPlay={onReady}
             />
@@ -44,11 +43,9 @@ function FullscreenVideo({ onReady }: { onReady?: () => void }) {
             style={styles.video}
             resizeMode={ResizeMode.COVER}
             shouldPlay
-            // isLooping  ← removed
             isMuted
             onReadyForDisplay={onReady}
             onPlaybackStatusUpdate={(status) => {
-                // When video finishes, show buttons immediately
                 if (status.isLoaded && status.didJustFinish) {
                     onReady?.();
                 }
@@ -65,24 +62,23 @@ export default function OnboardingScreen() {
     const handleNext = () => router.push('/paywall');
     const handleSignIn = () => router.push('/(auth)/login');
 
-    // Show buttons after VIDEO_DURATION_MS from when video is ready
-   // No timer needed — fires when video finishes
-const handleVideoReady = () => {
-    if (buttonsVisible) return; // prevent double-trigger
-    setButtonsVisible(true);
-    Animated.parallel([
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-        }),
-    ]).start();
-};
+
+    const handleVideoReady = () => {
+        if (buttonsVisible) return; // prevent double-trigger
+        setButtonsVisible(true);
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 500,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 500,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
 
     return (
         <>
@@ -125,7 +121,7 @@ const handleVideoReady = () => {
                             onPress={handleNext}
                             activeOpacity={0.8}
                         >
-<Ionicons name="chevron-forward" size={26} color="#fff" />                        </TouchableOpacity>
+                            <Ionicons name="chevron-forward" size={26} color="#fff" />                        </TouchableOpacity>
                     </Animated.View>
                 )}
             </View>

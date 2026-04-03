@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Generate a consistent daily lucky number for the user
 const useDailyLuckyNumber = (userId: string): number => {
   const [luckyNumber, setLuckyNumber] = useState<number>(0);
 
@@ -23,25 +22,20 @@ const useDailyLuckyNumber = (userId: string): number => {
     const generateLuckyNumber = async () => {
       try {
 
-        // Ensure we have a valid userId
         if (!userId || userId === 'default') {
-          // Generate a temporary number if no user ID is available
           const tempNumber = Math.floor(1000 + Math.random() * 9000);
           setLuckyNumber(tempNumber);
           return;
         }
 
-        // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
         const storageKey = `lucky_number_${userId}_${today}`;
 
-        // Try to get today's number from secure storage
         const storedNumber = await SecureStore.getItemAsync(storageKey);
 
         if (storedNumber) {
           setLuckyNumber(parseInt(storedNumber, 10));
         } else {
-          // Generate a new 4-digit number (1000-9999)
           const newNumber = Math.floor(1000 + Math.random() * 9000);
 
           // Store the new number for today
@@ -179,8 +173,6 @@ const useNextDrawDate = () => {
         const currentHour = now.getHours();
         const today = now.toISOString().split('T')[0];
 
-        // If it's before 9 PM, check for today's draw
-        // If it's after 9 PM, check from tomorrow
         const startDate = currentHour < 21 ? today : new Date(now.setDate(now.getDate() + 1)).toISOString().split('T')[0];
         const { data, error } = await supabase
           .from('lotterydate')
@@ -192,7 +184,6 @@ const useNextDrawDate = () => {
 
         if (data && data.length > 0) {
           const date = new Date(data[0].date);
-          // If the date is today and it's before 9 PM, show "Today"
           if (data[0].date === today && currentHour < 21) {
             setNextDrawDate('Today');
           } else {
@@ -217,7 +208,6 @@ const useNextDrawDate = () => {
 
 export default function HomeScreen() {
   const router = useRouter();
-  // Get the user's ID from Supabase auth
   const [userId, setUserId] = useState('default');
   const luckyNumber = useDailyLuckyNumber(userId);
   const nextDrawDate = useNextDrawDate();
@@ -233,7 +223,7 @@ export default function HomeScreen() {
   }, []);
   const { topNumbers, loading, error } = useNextDrawNumbers();
   const SCREEN_WIDTH = Dimensions.get("window").width;
-  const GRID_PADDING = 20 * 2; // container padding
+  const GRID_PADDING = 20 * 2;
   const GAP = 10;
   const { selectedBrand, setSelectedBrand } = useBrand();
   const CHIP_WIDTH = (SCREEN_WIDTH - GRID_PADDING - GAP * 3) / 4;
@@ -307,7 +297,7 @@ export default function HomeScreen() {
             {/* TOTO LOGO */}
             <TouchableOpacity
               onPress={() => {
-                setSelectedBrand("TOTO");   // ← add this line
+                setSelectedBrand("TOTO");
                 router.replace("/(tabs)/home");
               }}
             >
@@ -375,7 +365,6 @@ export default function HomeScreen() {
         )}
 
 
-        {/* bottom spacing for tab bar */}
         <View style={{ height: 120 }} />
       </ScrollView>
     </SafeAreaView>
