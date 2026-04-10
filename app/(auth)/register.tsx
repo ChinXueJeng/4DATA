@@ -1,11 +1,9 @@
 import { generateUsername, supabase } from "@/lib/supabase";
-import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, Stack } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Platform,
   StyleSheet,
   Text,
@@ -13,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState("");
@@ -20,91 +19,92 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const showToast = (type: "success" | "error" | "info", text1: string, text2?: string) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+      position: "top",          
+      visibilityTime: 4000,
+      autoHide: true,
+      topOffset: 60,          
+    });
+  };
+
   const handleRegister = async (type: "email" | "google") => {
     setLoading(true);
 
     try {
       if (type === "email") {
-        // Basic validation
-        if (!email || !password || !confirmPassword) {
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedEmail || !trimmedPassword || !confirmPassword) {
           throw new Error("Please fill in all fields");
         }
-        if (password !== confirmPassword) {
+
+        if (trimmedPassword !== confirmPassword) {
           throw new Error("Passwords do not match");
         }
-        if (password.length < 6) {
+
+        if (trimmedPassword.length < 6) {
           throw new Error("Password must be at least 6 characters");
         }
-        if (!/\S+@\S+\.\S+/.test(email)) {
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
           throw new Error("Please enter a valid email address");
         }
 
-        console.log("Attempting to register with email:", email);
-
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: password.trim(),
+          email: trimmedEmail,
+          password: trimmedPassword,
           options: {
             emailRedirectTo:
               Platform.OS === "web"
                 ? window.location.origin + "/auth/callback"
                 : "fourdata://auth/callback",
             data: {
-              email: email.trim(),
-              full_name: generateUsername(email),
-              username: generateUsername(email),
-              // Add any additional user metadata here
+              email: trimmedEmail,
+              full_name: generateUsername(trimmedEmail),
+              username: generateUsername(trimmedEmail),
             },
           },
         });
 
-        console.log("Signup response:", { data, error });
-
         if (error) {
-          console.error("Signup error details:", error);
-
-          // Handle specific error cases
           if (error.message.includes("already registered")) {
-            throw new Error(
-              "This email is already registered. Please log in instead.",
-            );
+            throw new Error("This email is already registered. Please log in instead.");
           } else if (error.message.includes("weak_password")) {
             throw new Error("Please choose a stronger password");
-          } else if (error.message.includes("email")) {
-            throw new Error("Please enter a valid email address");
           } else {
             throw error;
           }
         }
 
-        // If we get here, signup was successful
         if (data.user?.identities?.length === 0) {
           throw new Error("This email is already registered");
         }
 
-        // Store the email in AsyncStorage for the login screen
-        await AsyncStorage.setItem("userEmail", email);
+        await AsyncStorage.setItem("userEmail", trimmedEmail);
 
-        // Show success message
-        Alert.alert(
+        // Success toast + navigation
+        showToast(
+          "success",
           "Check your email",
-          "A confirmation email has been sent. Please verify your email to continue.",
-          [
-            {
-              text: "Go to Login",
-              onPress: () => router.replace("/(auth)/login"),
-              style: "default",
-            },
-          ],
+          "A confirmation email has been sent. Please verify to continue."
         );
+
+        setTimeout(() => {
+          router.replace("/(auth)/login");
+        }, 2500);
       }
-    } catch (err) {
-      console.error("Registration error:", err);
+    } catch (err: any) {
       const errorMessage =
         err instanceof Error
           ? err.message
           : "Registration failed. Please try again.";
-      Alert.alert("Error", errorMessage);
+
+      showToast("error", "Registration Error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -113,9 +113,11 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
+
       <Text style={styles.title}>Create Account</Text>
 
       <View style={styles.form}>
+
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -153,25 +155,6 @@ export default function RegisterScreen() {
           )}
         </TouchableOpacity>
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, styles.googleButton]}
-          onPress={() => handleRegister("google")}
-          disabled={loading}
-        >
-          <MaterialIcons
-            name="language"
-            size={20}
-            color="#fff"
-            style={styles.icon}
-          />
-          <Text style={styles.buttonText}>Continue with Google</Text>
-        </TouchableOpacity>
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Already have an account? </Text>
@@ -180,10 +163,11 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <Toast />
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
