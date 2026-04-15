@@ -10,7 +10,9 @@ export default function TabLayout() {
   const { selectedBrand } = useBrand(); 
 
   const bgColor =
-    selectedBrand === "MAGNUM" ? "#ffd700" : "#d60000ff";
+    //selectedBrand === "MAGNUM" ? "#ffd700" : "#d60000ff";
+    selectedBrand === "MAGNUM" ? "#d60000ff" : "#d60000ff";
+
 
   return (
     <Tabs

@@ -185,6 +185,39 @@ const useNextDrawNumbers = () => {
 
   return { topNumbers, loading, error };
 };
+const useJackpotData = () => {
+  const [jackpotData, setJackpotData] = useState<{
+    drawdate: string;
+    drawno: string;
+    jackpot_one: string;
+    jackpot_two: string;
+  } | null>(null);
+  const [jackpotLoading, setJackpotLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJackpot = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("jackpotDrawTable")
+          .select("drawdate, drawno, jackpot_one, jackpot_two")
+          .order("drawdate", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error) throw error;
+        setJackpotData(data);
+      } catch (err) {
+        console.error("Error fetching jackpot data:", err);
+      } finally {
+        setJackpotLoading(false);
+      }
+    };
+
+    fetchJackpot();
+  }, []);
+
+  return { jackpotData, jackpotLoading };
+};
 
 const useNextDrawDate = () => {
   const [nextDrawDate, setNextDrawDate] = useState("");
@@ -282,6 +315,7 @@ export default function HomeScreen() {
   const { topNumbers, loading, error } = useNextDrawNumbers();
   const { isSubscribed, isLoading: isSubscriptionLoading } = useSubscription();
   const SCREEN_WIDTH = Dimensions.get("window").width;
+  const { jackpotData, jackpotLoading } = useJackpotData();
   const GRID_PADDING = 20 * 2; // container padding
   const GAP = 10;
   const { selectedBrand, setSelectedBrand } = useBrand();
@@ -356,7 +390,7 @@ export default function HomeScreen() {
 
     return (
       <View style={styles.grid}>
-        {/* ✅ Normal chips (NO animation) */}
+        {/* Normal chips (NO animation) */}
         {data.slice(0, 40).map((item) => {
           const ChipWrapper = onPressChip ? TouchableOpacity : View;
 
@@ -429,10 +463,25 @@ export default function HomeScreen() {
           <View style={styles.imageContainer}>
 
             {/* MAGNUM LOGO */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => {
                 setSelectedBrand("MAGNUM");
                 router.replace("/(tabs)/home/index_magnum");
+              }}
+            >
+              <Image
+                source={require("@/assets/images/magnumLOGO.png")}
+                style={{ height: 50, width: 50, borderRadius: 10 }}
+              />
+            </TouchableOpacity> */}
+
+            {/* MAGNUM LOGO - Coming Soon */}
+            <TouchableOpacity
+              onPress={() => {
+                // Show "Coming Soon" alert instead of navigating
+                showCustomAlert("Coming Soon! This feature will be available soon!");
+
+                // setSelectedBrand("MAGNUM");
               }}
             >
               <Image
@@ -500,15 +549,21 @@ export default function HomeScreen() {
           <View style={styles.jackpotHeader}>
             <Text style={styles.jackpotTitle}>ESTIMATED JACKPOT AMOUNT</Text>
             <View style={styles.jackpotMeta}>
-              <Text style={styles.jackpotMetaText}>Draw Date: 28/03/2026, WEDNESDAY</Text>
-              <Text style={styles.jackpotMetaText}>Draw No: 6108/26</Text>
+              <Text style={styles.jackpotMetaText}>
+                Draw Date: {jackpotLoading ? "Loading..." : jackpotData?.drawdate ?? "N/A"}
+              </Text>
+              <Text style={styles.jackpotMetaText}>
+                Draw No: {jackpotLoading ? "Loading..." : jackpotData?.drawno ?? "N/A"}
+              </Text>
             </View>
           </View>
           <View style={styles.jackpotRow}>
             <Image source={require("@/assets/images/jackpot.png")} style={styles.jackpotLogo} />
             <View style={{ flex: 1 }}>
               <Text style={styles.jackpotLabel}>Jackpot 1</Text>
-              <Text style={styles.jackpotAmount}>RM18,111,000.00</Text>
+              <Text style={styles.jackpotAmount}>
+                {jackpotLoading ? "RM Loading..." : jackpotData?.jackpot_one ?? "N/A"}
+              </Text>
             </View>
           </View>
           <View style={styles.jackpotDivider} />
@@ -516,7 +571,9 @@ export default function HomeScreen() {
             <Image source={require("@/assets/images/jackpot.png")} style={styles.jackpotLogo} />
             <View style={{ flex: 1 }}>
               <Text style={styles.jackpotLabel}>Jackpot 2</Text>
-              <Text style={styles.jackpotAmount}>RM488,000.00</Text>
+              <Text style={styles.jackpotAmount}>
+                {jackpotLoading ? "RM Loading..." : jackpotData?.jackpot_two ?? "N/A"}
+              </Text>
             </View>
           </View>
         </View>
