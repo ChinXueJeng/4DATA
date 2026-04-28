@@ -173,15 +173,7 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.button, styles.skipButton]}
-            onPress={() => router.replace("/(tabs)/home")}
-            disabled={loading}
-          >
-            <Text style={[styles.buttonText, { color: "#1E5BFF", fontSize: 8 }]}>
-              Continue as Guest
-            </Text>
-          </TouchableOpacity>
+          
         </View>
       </View>
     </View>

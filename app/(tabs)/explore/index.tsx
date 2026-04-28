@@ -186,11 +186,6 @@ return (
             <Text style={styles.searchButtonText}>{t("search")}</Text>
           </TouchableOpacity>
         </View>
-        {!isSubscribed && (
-          <Text style={{ marginTop: 8, color: "#555" }}>
-            Remaining searches: {Math.max(0, 4 - searchCount)}
-          </Text>
-        )}
 
 
         {/* Recent Card */}
